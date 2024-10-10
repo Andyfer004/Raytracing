@@ -10,7 +10,7 @@ El proyecto implementa una escena tridimensional que simula un entorno estilo Mi
 
 Puedes ver el funcionamiento del proyecto en el siguiente enlace de YouTube:
 
-[![Video de Funcionamiento](https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg)]([https://youtu.be/vWoHP83uPqo])
+[![Video de Funcionamiento](https://img.youtube.com/vi/vWoHP83uPqo/maxresdefault.jpg)](https://youtu.be/vWoHP83uPqo)
 
 ### Cómo Ejecutar el Proyecto
 
