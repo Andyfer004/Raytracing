@@ -1,6 +1,6 @@
 use std::ops::{Add, Mul};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)] // Agregamos PartialEq para permitir la comparación
 pub struct Color {
     pub r: u8,
     pub g: u8,
@@ -14,7 +14,11 @@ impl Color {
 
     // Convertir Color a formato float (de 0.0 a 1.0) si es necesario
     pub fn to_f32(&self) -> (f32, f32, f32) {
-        (self.r as f32 / 255.0, self.g as f32 / 255.0, self.b as f32 / 255.0)
+        (
+            self.r as f32 / 255.0,
+            self.g as f32 / 255.0,
+            self.b as f32 / 255.0,
+        )
     }
 }
 

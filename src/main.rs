@@ -194,11 +194,15 @@ fn main() {
     objects.extend(hill_cubes.into_iter().map(|c| Box::new(c) as Box<dyn RayIntersect>));
     objects.extend(frame_cubes.into_iter().map(|c| Box::new(c) as Box<dyn RayIntersect>)); // Agregar el marco completo
 
+    let mut time = 0.0; // Variable de tiempo para la animación
+
     event_loop.run(move |event, _, control_flow| {
+        time += 0.016;  // Incrementa el tiempo por frame (~60 FPS)
         *control_flow = ControlFlow::Poll;
+
         match event {
             Event::RedrawRequested(_) => {
-                render_scene(&camera, &objects, &mut framebuffer);
+                render_scene(&camera, &objects, &mut framebuffer, &water_material, time);
 
                 for (i, pixel) in framebuffer.pixels.iter().enumerate() {
                     let frame = pixels.get_frame();
@@ -241,7 +245,7 @@ fn main() {
     });
 }
 
-fn render_scene(camera: &Camera, objects: &[Box<dyn RayIntersect>], framebuffer: &mut Framebuffer) {
+fn render_scene(camera: &Camera, objects: &[Box<dyn RayIntersect>], framebuffer: &mut Framebuffer, water_material: &Material, time: f32) {
     for y in 0..framebuffer.height {
         for x in 0..framebuffer.width {
             let u = x as f32 / framebuffer.width as f32;
@@ -249,14 +253,14 @@ fn render_scene(camera: &Camera, objects: &[Box<dyn RayIntersect>], framebuffer:
 
             let ray_direction = camera.get_ray_direction(u, v, framebuffer.aspect_ratio());
 
-            let color = cast_ray(camera.eye, ray_direction, &objects);
+            let color = cast_ray(camera.eye, ray_direction, &objects, water_material, time);
 
             framebuffer.set_pixel(x, y, color);
         }
     }
 }
 
-fn cast_ray(origin: Vec3, direction: Vec3, objects: &[Box<dyn RayIntersect>]) -> Color {
+fn cast_ray(origin: Vec3, direction: Vec3, objects: &[Box<dyn RayIntersect>], water_material: &Material, time: f32) -> Color {
     let mut closest_intersection: Option<Intersect> = None;
 
     for object in objects {
@@ -271,6 +275,12 @@ fn cast_ray(origin: Vec3, direction: Vec3, objects: &[Box<dyn RayIntersect>]) ->
 
     if let Some(intersect) = closest_intersection {
         if intersect.material.has_texture {
+            if intersect.material == *water_material {
+                // Usar rem_euclid para que las coordenadas de textura sean cíclicas en el rango [0.0, 1.0]
+                let animated_u = (intersect.u + time * 1.0).rem_euclid(1.0); // Mantener en [0.0, 1.0]
+                let animated_v = (intersect.v + time * 1.0).rem_euclid(1.0);
+                return intersect.material.get_color_from_texture(animated_u, animated_v);
+            }
             return intersect.material.get_color_from_texture(intersect.u, intersect.v);
         }
         return intersect.material.diffuse;

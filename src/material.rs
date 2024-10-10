@@ -30,23 +30,22 @@ impl Material {
             texture,
         }
     }
+
     pub fn get_color_from_texture(&self, u: f32, v: f32) -> Color {
         if let Some(texture) = &self.texture {
             // Calcular las coordenadas de píxel dentro de la imagen de la textura
             let x = ((u * (texture.width() as f32)).min(texture.width() as f32 - 1.0)) as u32;
             let y = ((v * (texture.height() as f32)).min(texture.height() as f32 - 1.0)) as u32;
-            
-    
+
             if x < texture.width() && y < texture.height() {
                 let pixel = texture.get_pixel(x, y);
                 return Color::new(pixel[0], pixel[1], pixel[2]);
             }
         }
-    
+
         // Si no hay textura, devuelve el color difuso
         self.diffuse
     }
-    
 }
 
 impl Default for Material {
@@ -60,5 +59,18 @@ impl Default for Material {
             has_texture: false,
             texture: None,
         }
+    }
+}
+
+// Implementación personalizada de PartialEq para Material, ignorando la textura
+impl PartialEq for Material {
+    fn eq(&self, other: &Self) -> bool {
+        self.diffuse == other.diffuse &&
+        self.albedo == other.albedo &&
+        self.specular == other.specular &&
+        self.reflectivity == other.reflectivity &&
+        self.transparency == other.transparency &&
+        self.has_texture == other.has_texture
+        // Ignoramos la comparación de `texture` ya que `DynamicImage` no implementa `PartialEq`.
     }
 }
