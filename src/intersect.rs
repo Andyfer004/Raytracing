@@ -3,37 +3,39 @@ use nalgebra_glm::Vec3;
 
 #[derive(Debug, Clone)]
 pub struct Intersect {
-    pub distance: f32,
-    pub is_intersecting: bool,
-    pub material: Material,
-    pub u: f32,
-    pub v: f32,
-    pub point: Vec3,    // Agregar el campo point para almacenar la posición de la intersección
-    pub normal: Vec3,   // Agregar el campo normal para almacenar la normal en la intersección
+    pub distance: f32,         // Distancia desde el origen del rayo al punto de intersección
+    pub is_intersecting: bool, // Indica si hubo intersección
+    pub material: Material,    // Material del objeto en la intersección
+    pub u: f32,                // Coordenada U para mapeo de texturas
+    pub v: f32,                // Coordenada V para mapeo de texturas
+    pub position: Vec3,           // Punto de intersección en el espacio 3D
+    pub normal: Vec3,          // Normal en el punto de intersección
 }
 
 impl Intersect {
-    pub fn new(point: Vec3, normal: Vec3, distance: f32, material: &Material, u: f32, v: f32) -> Self {
+    // Constructor para crear un nuevo objeto Intersect con valores válidos
+    pub fn new(position: Vec3, normal: Vec3, distance: f32, material: &Material, u: f32, v: f32) -> Self {
         Intersect {
             distance,
-            is_intersecting: true,
-            material: material.clone(), // Clonamos el material para evitar moverlo
+            is_intersecting: true,        // Se establece en true porque se detectó una intersección
+            material: material.clone(),   // Clonar el material para evitar moverlo
             u,
             v,
-            point,   // Asignar el valor del punto de intersección
-            normal,  // Asignar el valor de la normal en el punto de intersección
+            position,   // Asignar el punto de intersección
+            normal,  // Asignar la normal en el punto de intersección
         }
     }
 
+    // Constructor para un objeto Intersect vacío (sin intersección)
     pub fn empty() -> Self {
         Intersect {
             distance: 0.0,
-            is_intersecting: false,
-            material: Material::default(),
+            is_intersecting: false,       // No hubo intersección
+            material: Material::default(), // Usar el material por defecto
             u: 0.0,
             v: 0.0,
-            point: Vec3::zeros(),   // Valor por defecto (0, 0, 0) para el punto
-            normal: Vec3::zeros(),  // Valor por defecto (0, 0, 0) para la normal
+            position: Vec3::zeros(),         // Punto por defecto (0, 0, 0)
+            normal: Vec3::zeros(),        // Normal por defecto (0, 0, 0)
         }
     }
 }

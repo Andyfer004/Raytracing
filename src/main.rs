@@ -199,11 +199,11 @@ fn main() {
     event_loop.run(move |event, _, control_flow| {
         time += 0.016;  // Incrementa el tiempo por frame (~60 FPS)
         *control_flow = ControlFlow::Poll;
-
+    
         match event {
             Event::RedrawRequested(_) => {
                 render_scene(&camera, &objects, &mut framebuffer, &water_material, time);
-
+    
                 for (i, pixel) in framebuffer.pixels.iter().enumerate() {
                     let frame = pixels.get_frame();
                     let offset = i * 4;
@@ -212,7 +212,7 @@ fn main() {
                     frame[offset + 2] = pixel.b;
                     frame[offset + 3] = 255;
                 }
-
+    
                 if pixels.render().is_err() {
                     *control_flow = ControlFlow::Exit;
                     return;
@@ -221,6 +221,21 @@ fn main() {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
                 WindowEvent::Resized(new_size) => pixels.resize_surface(new_size.width, new_size.height),
+                WindowEvent::KeyboardInput { input, .. } => {
+                    if let Some(winit::event::VirtualKeyCode::Up) = input.virtual_keycode {
+                        camera.zoom(0.5);  // Acercar con la tecla de flecha hacia arriba
+                    }
+                    if let Some(winit::event::VirtualKeyCode::Down) = input.virtual_keycode {
+                        camera.zoom(-0.5);  // Alejar con la tecla de flecha hacia abajo
+                    }
+                }
+                WindowEvent::MouseWheel { delta, .. } => {
+                    let zoom_amount = match delta {
+                        winit::event::MouseScrollDelta::LineDelta(_, scroll) => scroll,  // Usar el scroll del mouse
+                        _ => 0.0,
+                    };
+                    camera.zoom(zoom_amount * 0.5);  // Ajusta la velocidad del zoom
+                }
                 _ => (),
             },
             Event::DeviceEvent { event, .. } => match event {
@@ -228,21 +243,22 @@ fn main() {
                     yaw += dx as f32 * 0.01;
                     pitch -= dy as f32 * 0.01;
                     pitch = pitch.clamp(-std::f32::consts::FRAC_PI_2 + 0.1, std::f32::consts::FRAC_PI_2 - 0.1);
-
+    
                     let distance = 14.0;
                     let eye_x = distance * yaw.cos() * pitch.cos();
                     let eye_y = distance * pitch.sin();
                     let eye_z = distance * yaw.sin() * pitch.cos();
-
+    
                     camera.eye = Vec3::new(eye_x, eye_y, eye_z);
                 }
                 _ => (),
             },
             _ => (),
         }
-
+    
         window.request_redraw();
     });
+    
 }
 
 fn render_scene(camera: &Camera, objects: &[Box<dyn RayIntersect>], framebuffer: &mut Framebuffer, water_material: &Material, time: f32) {
@@ -260,6 +276,11 @@ fn render_scene(camera: &Camera, objects: &[Box<dyn RayIntersect>], framebuffer:
     }
 }
 
+fn fresnel(reflectivity: f32, view_dir: Vec3, normal: Vec3) -> f32 {
+    let cos_theta = view_dir.dot(&normal).abs();
+    let r0 = reflectivity;
+    r0 + (1.0 - r0) * (1.0 - cos_theta).powi(5)
+}
 fn cast_ray(origin: Vec3, direction: Vec3, objects: &[Box<dyn RayIntersect>], water_material: &Material, time: f32) -> Color {
     let mut closest_intersection: Option<Intersect> = None;
 
@@ -277,8 +298,8 @@ fn cast_ray(origin: Vec3, direction: Vec3, objects: &[Box<dyn RayIntersect>], wa
         if intersect.material.has_texture {
             if intersect.material == *water_material {
                 // Usar rem_euclid para que las coordenadas de textura sean cíclicas en el rango [0.0, 1.0]
-                let animated_u = (intersect.u + time * 1.0).rem_euclid(1.0); // Mantener en [0.0, 1.0]
-                let animated_v = (intersect.v + time * 1.0).rem_euclid(1.0);
+                let animated_u = (intersect.u + time * 0.5).rem_euclid(1.0); // Mantener en [0.0, 1.0]
+                let animated_v = (intersect.v + time * 0.5).rem_euclid(1.0);
                 return intersect.material.get_color_from_texture(animated_u, animated_v);
             }
             return intersect.material.get_color_from_texture(intersect.u, intersect.v);
@@ -286,5 +307,5 @@ fn cast_ray(origin: Vec3, direction: Vec3, objects: &[Box<dyn RayIntersect>], wa
         return intersect.material.diffuse;
     }
 
-    Color::new(135, 206, 235)  // Color de fondo (cielo)
+    Color::new(0, 129, 167)  // Color de fondo (cielo)
 }

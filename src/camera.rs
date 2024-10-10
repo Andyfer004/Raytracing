@@ -40,4 +40,9 @@ impl Camera {
 
         self.eye = self.center - new_direction_3d;
     }
+
+    pub fn zoom(&mut self, zoom_amount: f32) {
+        let direction = (self.center - self.eye).normalize(); // Dirección de la cámara
+        self.eye += direction * zoom_amount; // Acercar o alejar
+    }
 }

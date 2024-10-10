@@ -3,17 +3,26 @@ use image::{DynamicImage, GenericImageView};
 
 #[derive(Debug, Clone)]
 pub struct Material {
-    pub diffuse: Color,
-    pub albedo: f32,
-    pub specular: f32,
-    pub reflectivity: f32,
-    pub transparency: f32,
-    pub has_texture: bool,
-    pub texture: Option<DynamicImage>, // Agregar la textura
+    pub diffuse: Color,           // Color difuso del material
+    pub albedo: f32,              // Coeficiente de reflexión
+    pub specular: f32,            // Coeficiente especular
+    pub reflectivity: f32,        // Coeficiente de reflectividad
+    pub transparency: f32,        // Transparencia del material
+    pub has_texture: bool,        // Si el material tiene una textura
+    pub texture: Option<DynamicImage>, // La textura opcional (cargada de un archivo)
 }
 
 impl Material {
-    pub fn new(diffuse: Color, albedo: f32, specular: f32, reflectivity: f32, transparency: f32, has_texture: bool, texture_path: Option<&str>) -> Self {
+    // Constructor para un material, con opción de cargar una textura desde el disco
+    pub fn new(
+        diffuse: Color,
+        albedo: f32,
+        specular: f32,
+        reflectivity: f32,
+        transparency: f32,
+        has_texture: bool,
+        texture_path: Option<&str>,
+    ) -> Self {
         let texture = if let Some(path) = texture_path {
             Some(image::open(path).expect("Failed to load texture"))
         } else {
@@ -31,11 +40,12 @@ impl Material {
         }
     }
 
+    // Método para obtener el color de una textura en base a coordenadas UV
     pub fn get_color_from_texture(&self, u: f32, v: f32) -> Color {
         if let Some(texture) = &self.texture {
-            // Calcular las coordenadas de píxel dentro de la imagen de la textura
-            let x = ((u * (texture.width() as f32)).min(texture.width() as f32 - 1.0)) as u32;
-            let y = ((v * (texture.height() as f32)).min(texture.height() as f32 - 1.0)) as u32;
+            // Calcular las coordenadas del píxel dentro de la imagen de la textura
+            let x = ((u * texture.width() as f32).min(texture.width() as f32 - 1.0)) as u32;
+            let y = ((v * texture.height() as f32).min(texture.height() as f32 - 1.0)) as u32;
 
             if x < texture.width() && y < texture.height() {
                 let pixel = texture.get_pixel(x, y);
@@ -43,7 +53,7 @@ impl Material {
             }
         }
 
-        // Si no hay textura, devuelve el color difuso
+        // Si no hay textura, devuelve el color difuso por defecto
         self.diffuse
     }
 }
@@ -51,7 +61,7 @@ impl Material {
 impl Default for Material {
     fn default() -> Self {
         Material {
-            diffuse: Color::new(0, 0, 0),
+            diffuse: Color::new(0, 0, 0), // Color negro por defecto
             albedo: 1.0,
             specular: 0.0,
             reflectivity: 0.0,
